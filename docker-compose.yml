@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  manager:
+    build: .
+    container_name: manager
+    depends_on:
+      - rabbitmq
+    ports:
+      - "5000:5000"
+    command: python manager.py
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - .:/app
+    working_dir: /app
+
+  node1:
+    build: .
+    container_name: node1
+    depends_on:
+      - manager
+      - rabbitmq
+    ports:
+      - "5001:5001"
+    environment:
+      - NODE_ID=node1
+      - NODE_URL=http://node1:5001
+    command: python node.py
+    volumes:
+      - .:/app
+    working_dir: /app
+
+  node2:
+    build: .
+    container_name: node2
+    depends_on:
+      - manager
+      - rabbitmq
+    ports:
+      - "5002:5002"
+    environment:
+      - NODE_ID=node2
+      - NODE_URL=http://node2:5002
+    command: python node.py
+    volumes:
+      - .:/app
+    working_dir: /app
